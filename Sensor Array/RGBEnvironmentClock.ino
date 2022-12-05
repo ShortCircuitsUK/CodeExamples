@@ -205,13 +205,14 @@ const int light2[5]
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 #include <DHT_U.h>
-#define DHTTYPE    DHT11     // DHT 11
-DHT_Unified dht(DHTPIN, DHTTYPE);
 
 //PINS
 #define DHTPIN 13
 const int MIC = A3;
 const int LIGHT = A2;
+
+#define DHTTYPE    DHT11     // DHT 11
+DHT_Unified dht(DHTPIN, DHTTYPE);
 
 int temp = 0;
 int newTemp = 0;
@@ -409,50 +410,47 @@ if (alarm == 1)
  *        
  */
 
-for (int cha = 0; cha <= sizeof(alarmtext) -1; cha++)
-{
+  for (int cha = 0; cha <= sizeof(alarmtext) -1; cha++)
+  {
+    //Serial.println(letter[alarmtext[cha]]);
+    for (int nm = 0; nm <= 40; nm++)
+    {
 
-//Serial.println(letter[alarmtext[cha]]);
+    // Shift Out Message
 
-for (int nm = 0; nm <= 40; nm++)
+    int d1 = 1;
 
-{
+    digitalWrite(LATCH, LOW);
+    shiftOut(SER,CLK,LSBFIRST,letter[alarmtext[cha]]);
+    shiftOut(SER,CLK,LSBFIRST,digit0);
+    digitalWrite(LATCH,HIGH);
 
-// Shift Out Message
+    delay(d1);
 
-int d1 = 1;
+    digitalWrite(LATCH, LOW);
+    shiftOut(SER,CLK,LSBFIRST,letter[alarmtext[cha+1]]);
+    shiftOut(SER,CLK,LSBFIRST,digit1);
+    digitalWrite(LATCH,HIGH);
 
-digitalWrite(LATCH, LOW);
-shiftOut(SER,CLK,LSBFIRST,letter[alarmtext[cha]]);
-shiftOut(SER,CLK,LSBFIRST,digit0);
-digitalWrite(LATCH,HIGH);
+    delay(d1);
 
-delay(d1);
+    digitalWrite(LATCH, LOW);
+    shiftOut(SER,CLK,LSBFIRST,letter[alarmtext[cha+2]]);
+    shiftOut(SER,CLK,LSBFIRST,digit2);
+    digitalWrite(LATCH,HIGH);
 
-digitalWrite(LATCH, LOW);
-shiftOut(SER,CLK,LSBFIRST,letter[alarmtext[cha+1]]);
-shiftOut(SER,CLK,LSBFIRST,digit1);
-digitalWrite(LATCH,HIGH);
+    delay(d1);
 
-delay(d1);
+    digitalWrite(LATCH, LOW);
+    shiftOut(SER,CLK,LSBFIRST,letter[alarmtext[cha+3]]);
+    shiftOut(SER,CLK,LSBFIRST,digit3);
+    digitalWrite(LATCH,HIGH);
 
-digitalWrite(LATCH, LOW);
-shiftOut(SER,CLK,LSBFIRST,letter[alarmtext[cha+2]]);
-shiftOut(SER,CLK,LSBFIRST,digit2);
-digitalWrite(LATCH,HIGH);
+    delay(d1);
 
-delay(d1);
+    }
 
-digitalWrite(LATCH, LOW);
-shiftOut(SER,CLK,LSBFIRST,letter[alarmtext[cha+3]]);
-shiftOut(SER,CLK,LSBFIRST,digit3);
-digitalWrite(LATCH,HIGH);
-
-delay(d1);
-
-}
-
-}
+  }
 
 }
 
@@ -524,29 +522,29 @@ shiftOut(SER,CLK,LSBFIRST,digit3);
 digitalWrite(LATCH,HIGH);
 
 if (millis() - previousMillis2 > 6000)
-{
-  sensors_event_t event;
-  dht.temperature().getEvent(&event);
-  temp = event.temperature;
-  dht.humidity().getEvent(&event);
-  humid = event.relative_humidity;
-  //Serial.print("humid = ");
-  //Serial.println(humid);
-  //Serial.print("New humidity = ");
-  //Serial.println(newHumid);
-  //Serial.print("temp = ");
-  //Serial.println(temp);
-  //Serial.print("New temp = ");
-  //Serial.println(newTemp);
-  previousMillis2 = millis();    
-}
+  {
+    sensors_event_t event;
+    dht.temperature().getEvent(&event);
+    temp = event.temperature;
+    dht.humidity().getEvent(&event);
+    humid = event.relative_humidity;
+    //Serial.print("humid = ");
+    //Serial.println(humid);
+    //Serial.print("New humidity = ");
+    //Serial.println(newHumid);
+    //Serial.print("temp = ");
+    //Serial.println(temp);
+    //Serial.print("New temp = ");
+    //Serial.println(newTemp);
+    previousMillis2 = millis();    
+  }
 
 if (millis() - previousMillis3 > 100)
-{
-  light = analogRead(LIGHT);
-  previousMillis3 = millis();    
+  {
+    light = analogRead(LIGHT);
+    previousMillis3 = millis();    
 
-}
+  }
 
 int mn = 1024; // mn only decreases
 int mx = 0;    // mx only increases
