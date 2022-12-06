@@ -13,7 +13,8 @@ sound and light levels read by the various sensors of the Sensor Array.
 Time, Date and Year are displayed on the Digitiser. 
 Left button cycles the Time, Date and Year, also changing the mode LEDs.
 Right button turns both displays off. 
-An alarm can be set using alarmtime. When it goes off, a message is displayed.
+An alarm can be set using alarmtime. When it goes off, a message is displayed 
+and the RGB Matrix flashes red. Change the colour by chaging the byte values in lines 396 and 397
 Set the alarm time and message by changing alarmtime and alarmtext respectively.
 
 To set the time: upload the code without commenting "rtc.adjust..." Then re-comment and re-upload the code. 
@@ -26,6 +27,7 @@ If you don't, every time you turn the device off the time will be reset to the t
 RTC_DS1307 rtc; // Create an instance of the DS1307
 int alarm = 0; // alarm on or off
 int alarmTime = 0100; // set the alarm time here
+int messageSpeed = 40; // Speed of the alarm message higher is slower
 
 //Digitiser
 
@@ -227,7 +229,7 @@ void setup()
 
 {
 
-Serial.begin(9600);
+Serial.begin(19200);
 
 // put your setup code here, to run once:
 
@@ -269,7 +271,6 @@ humid = event.relative_humidity;
   
 }
 
-
 void rgbshow()
 {
 
@@ -307,8 +308,129 @@ delay(d);
 
 }
 
+void digitiserShow()
+{
+  
+int d1 = 3;
+
+digitalWrite(LATCH, LOW);
+shiftOut(SER,CLK,LSBFIRST,number[thousands]);
+shiftOut(SER,CLK,LSBFIRST,digit0);
+digitalWrite(LATCH,HIGH);
+
+delay(d1);
+
+digitalWrite(LATCH, LOW);
+shiftOut(SER,CLK,LSBFIRST,number[hundreds]);
+shiftOut(SER,CLK,LSBFIRST,digit1);
+digitalWrite(LATCH,HIGH);
+
+delay(d1);
+
+digitalWrite(LATCH, LOW);
+shiftOut(SER,CLK,LSBFIRST,number[tens]);
+shiftOut(SER,CLK,LSBFIRST,digit2);
+digitalWrite(LATCH,HIGH);
+
+delay(d1);
+
+digitalWrite(LATCH, LOW);
+shiftOut(SER,CLK,LSBFIRST,number[ones]);
+shiftOut(SER,CLK,LSBFIRST,digit3);
+digitalWrite(LATCH,HIGH);
+
+}  
+  
+void alarmShow()
+{
+
+// Cycle through characters in alarm Message
+
+for (int cha = 0; cha <= sizeof(alarmtext) -1; cha++)
+  {
+    //Serial.println(letter[alarmtext[cha]]);
+    for (int nm = 0; nm <= messageSpeed; nm++)
+    {
+
+    // Shift Out Message
+
+    int d1 = 1;
+
+    digitalWrite(LATCH, LOW);
+    shiftOut(SER,CLK,LSBFIRST,letter[alarmtext[cha]]);
+    shiftOut(SER,CLK,LSBFIRST,digit0);
+    digitalWrite(LATCH,HIGH);
+
+    delay(d1);
+
+    if (cha <= sizeof(alarmtext) -4) // removes extra characters at the end of the message
+    {
+    digitalWrite(LATCH, LOW);
+    shiftOut(SER,CLK,LSBFIRST,letter[alarmtext[cha+1]]);
+    shiftOut(SER,CLK,LSBFIRST,digit1);
+    digitalWrite(LATCH,HIGH);
+        
+    delay(d1);
+
+    digitalWrite(LATCH, LOW);
+    shiftOut(SER,CLK,LSBFIRST,letter[alarmtext[cha+2]]);
+    shiftOut(SER,CLK,LSBFIRST,digit2);
+    digitalWrite(LATCH,HIGH);
+
+    delay(d1);
+
+    digitalWrite(LATCH, LOW);
+    shiftOut(SER,CLK,LSBFIRST,letter[alarmtext[cha+3]]);
+    shiftOut(SER,CLK,LSBFIRST,digit3);
+    digitalWrite(LATCH,HIGH);
+
+    delay(d1);
+    }
+    
+    //RGB Matrix Flash
+        
+    if (cha % 2)    
+      {
+
+      digitalWrite(RGBLATCH, LOW);
+      shiftOut(RGBSER,RGBCLK,MSBFIRST,B00000000);
+      shiftOut(RGBSER,RGBCLK,MSBFIRST,B00001111);
+      digitalWrite(RGBLATCH,HIGH);
+
+      } 
+    else 
+      {
+
+      digitalWrite(RGBLATCH, LOW);
+      shiftOut(RGBSER,RGBCLK,MSBFIRST,B00000000);
+      shiftOut(RGBSER,RGBCLK,MSBFIRST,B00000000);
+      digitalWrite(RGBLATCH,HIGH);
+      }
+    }
+  }
+}
+
+  
 void loop() 
 {
+
+// Time Stuff
+
+DateTime now = rtc.now();      // get the current time
+
+// Show alarm if applicable
+
+//alarmTime = now.hour() * 100 + now.minute(); // uncomment to debug alarm message
+
+if (now.hour() * 100 + now.minute() == alarmTime) // If its alarm time, run alarm function
+  {
+    alarmShow();
+  }
+else // Else, resume normal funstion
+  {
+    rgbshow();
+    digitiserShow();
+  }
 
 // Set Display Fade
 if (mode2 == 0)
@@ -375,85 +497,6 @@ if (sw2State != lastsw2State) {
 // save the current state as the last state, for next time through the loop
 lastsw2State = sw2State;
 
-// Time Stuff
-
-DateTime now = rtc.now();      // get the current time
-
-//Alarm
-
-if (now.hour() * 100 + now.minute() == alarmTime) // If its alarm time, set alarm as 1
-{
-  alarm = 1;
-}
-else 
-{
-alarm = 0;
-}
-
-// Alarm Message
-
-if (alarm == 1)
-{
-
-// Message:        s  t  r  e t  c h   y  o  u  r    l  e g s
-// letter lookup:  19 20 18 5 20 3 8 0 25 15 21 18 0 12 5 7 19
-
-/*
- * Order: 0, 0, 0, 0
- *        0, 0, 0, 19
- *        0, 0, 19,20
- *        0, 19,20,18
- *        19,20,18,5
- *        20,18,5, 20
- *        18,5, 20,3
- *        5,20, 3, 8
- *        
- */
-
-  for (int cha = 0; cha <= sizeof(alarmtext) -1; cha++)
-  {
-    //Serial.println(letter[alarmtext[cha]]);
-    for (int nm = 0; nm <= 40; nm++)
-    {
-
-    // Shift Out Message
-
-    int d1 = 1;
-
-    digitalWrite(LATCH, LOW);
-    shiftOut(SER,CLK,LSBFIRST,letter[alarmtext[cha]]);
-    shiftOut(SER,CLK,LSBFIRST,digit0);
-    digitalWrite(LATCH,HIGH);
-
-    delay(d1);
-
-    digitalWrite(LATCH, LOW);
-    shiftOut(SER,CLK,LSBFIRST,letter[alarmtext[cha+1]]);
-    shiftOut(SER,CLK,LSBFIRST,digit1);
-    digitalWrite(LATCH,HIGH);
-
-    delay(d1);
-
-    digitalWrite(LATCH, LOW);
-    shiftOut(SER,CLK,LSBFIRST,letter[alarmtext[cha+2]]);
-    shiftOut(SER,CLK,LSBFIRST,digit2);
-    digitalWrite(LATCH,HIGH);
-
-    delay(d1);
-
-    digitalWrite(LATCH, LOW);
-    shiftOut(SER,CLK,LSBFIRST,letter[alarmtext[cha+3]]);
-    shiftOut(SER,CLK,LSBFIRST,digit3);
-    digitalWrite(LATCH,HIGH);
-
-    delay(d1);
-
-    }
-
-  }
-
-}
-
 if (mode == 0) // Time
   {
     num = (now.hour() * 100 + now.minute());
@@ -491,35 +534,7 @@ hundreds = ((num%1000)/100);   // get the hundreds value
 tens = ((num%100)/10);         // get the tens value
 ones = ((num%10)/1);           // get the ones value
 
-// Shift Out DIGITISER
-
-int d1 = 3;
-
-digitalWrite(LATCH, LOW);
-shiftOut(SER,CLK,LSBFIRST,number[thousands]);
-shiftOut(SER,CLK,LSBFIRST,digit0);
-digitalWrite(LATCH,HIGH);
-
-delay(d1);
-
-digitalWrite(LATCH, LOW);
-shiftOut(SER,CLK,LSBFIRST,number[hundreds]);
-shiftOut(SER,CLK,LSBFIRST,digit1);
-digitalWrite(LATCH,HIGH);
-
-delay(d1);
-
-digitalWrite(LATCH, LOW);
-shiftOut(SER,CLK,LSBFIRST,number[tens]);
-shiftOut(SER,CLK,LSBFIRST,digit2);
-digitalWrite(LATCH,HIGH);
-
-delay(d1);
-
-digitalWrite(LATCH, LOW);
-shiftOut(SER,CLK,LSBFIRST,number[ones]);
-shiftOut(SER,CLK,LSBFIRST,digit3);
-digitalWrite(LATCH,HIGH);
+// Read DHT11 sensor every 60 seconds
 
 if (millis() - previousMillis2 > 6000)
   {
@@ -538,6 +553,8 @@ if (millis() - previousMillis2 > 6000)
     //Serial.println(newTemp);
     previousMillis2 = millis();    
   }
+
+// Read LDR every 100 millis
 
 if (millis() - previousMillis3 > 100)
   {
@@ -572,15 +589,13 @@ Output5 = vol1[newVol];
 Output6 = vol2[newVol];
 Output7 = light1[newLight];
 Output8 = light2[newLight];
+//Serial.print("vol = ");
+//Serial.println(vol);
+//Serial.print("newVol = ");
+//Serial.println(newVol);
+//Serial.print("Light = ");
+//Serial.println(light);
+//Serial.print("New light = ");
+//Serial.println(newLight);
 
-rgbshow();
-
-  //Serial.print("vol = ");
-  //Serial.println(vol);
-  //Serial.print("newVol = ");
-  //Serial.println(newVol);
-  //Serial.print("Light = ");
-  //Serial.println(light);
-  //Serial.print("New light = ");
-  //Serial.println(newLight);
 }
