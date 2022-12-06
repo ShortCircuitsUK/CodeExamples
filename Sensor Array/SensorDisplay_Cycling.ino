@@ -1,9 +1,24 @@
-//Output Pin Variables 
+/*
+Written by Martyn Evans @ Short Circuits under the MIT License.
 
+This uses the MOTHERBOARD, DIGITISER and SENSOR ARRAY kits
+Wire up the kits according to the pin assignments under PINS in each of the following sections
+or change the pin assignments according to your wiring
+Written in easy to understand code, not efficient code
+
+Functions:
+
+Digitiser shows temperature and humidity
+Switching between the two every 5 seconds
+To set the delay, change delay1 and delay2
+*/
+
+//PINS
 const int SER = 7;    // Shift Register Serial Data pin
 const int CLK = 8;    // Shift Register Clock pin
 const int LAT = 9;    // Shift Register Latch pin
 const int OE = 10;    // Shift Register Output Enable pin
+#define DHTPIN 2     // Digital pin connected to the DHT sensor 
 
 //Digitiser Stuff
 
@@ -34,7 +49,6 @@ unsigned long LastRead = 0;
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 #include <DHT_U.h>
-#define DHTPIN 2     // Digital pin connected to the DHT sensor 
 #define DHTTYPE DHT11 
 DHT_Unified dht(DHTPIN, DHTTYPE);
 
