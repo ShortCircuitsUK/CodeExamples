@@ -1,9 +1,26 @@
+/*
+Written by Martyn Evans @ Short Circuits under the MIT License.
+
+This uses the MOTHERBOARD, and DIGITISER kits
+Wire up the kits according to the pin assignments under PINS in each of the following sections
+or change the pin assignments according to your wiring
+Written in easy to understand code, not efficient code
+
+Functions:
+
+Digitiser shows time, date, or year
+Switch between time, date and year by pressing the left button
+A message will display at a set time
+*/
+
 //RTC Stuff
 
 #include "RTClib.h" // Include RTClib library
 RTC_DS1307 rtc; // Create an instance of the DS1307
 
 //DIGITISER Stuff
+
+//PINS
 
 const int SER = 3;
 const int CLK = 4;
