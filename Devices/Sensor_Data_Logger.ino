@@ -1,3 +1,16 @@
+/*
+Written by Martyn Evans @ Short Circuits under the MIT License.
+
+This uses the MOTHERBOARD, and SENSOR ARRAY kits
+Wire the sensor array's DHT pin to pin 9 and the 4 SD card pins to 10, 11, 12 and 13 respectively 
+you can change the DHT pin, but the SD card pins are set by libraries
+
+Written in easy to understand code, not efficient code
+
+Functions:
+
+Saves the temperature, humidity, time and date to a text file on the SD card every 5 mins.
+*/
 
 
 //Include Libraries
